@@ -6,10 +6,10 @@ import pandas as pd
 app = Flask(__name__)
 
 # Load models
-model_clear = pickle.load(open('models/clear_model.pkl', 'rb'))
-model_cloudy = pickle.load(open('models/cloudy_model.pkl', 'rb'))
-model_rainy = pickle.load(open('models/rainy_model.pkl', 'rb'))
-model_unified = pickle.load(open('models/unified_model.pkl', 'rb'))
+model_clear = pickle.load(open('models/model_clear.pkl', 'rb'))
+model_cloudy = pickle.load(open('models/model_cloudy.pkl', 'rb'))
+model_rainy = pickle.load(open('models/model_rainy.pkl', 'rb'))
+model_unified = pickle.load(open('models/model_Unified.pkl', 'rb'))
 
 # Function to predict using the appropriate model based on weather condition
 def predict_weather(condition, values):
