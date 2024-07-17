@@ -1,4 +1,6 @@
-flask
-xgboost
+Flask
 numpy
 pandas
+scikit-learn
+pickle
+matplotlib
