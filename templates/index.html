@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body onload="initializeUserTag(); showSection('home')"></body>
+    <nav>
+        <a href="#home" onclick="showSection('home')">Home</a>
+        <a href="#projects" onclick="showSection('projects')">Projects</a>
+        <a href="#contact" onclick="showSection('contact')">Contact Us</a>
+        <a href="#blogs" onclick="showSection('blogs')">Blogs</a>
+    </nav>
+
+    <div id="home" class="content">
+        <h1>Welcome to the Research Portal of Dr. Jaydeep Singh</h1>
+        <p>Welcome! I’m Dr. Jaydeep Singh, a passionate Atmospheric Science expert currently serving as a Postdoctoral Researcher at Goethe University Frankfurt. My research focuses on advancing our understanding of atmospheric processes and enhancing predictive models through cutting-edge machine learning techniques.</p>
+    </div>
+
+    <div id="projects" class="content">
+        <h1>Our Projects</h1>
+        <table>
+            <tr>
+                <th>Select</th>
+                <th>Model</th>
+                <th>Upload File</th>
+                <th>Temperature</th>
+                <th>Relative Himidity</th>
+                <th>Cloud Correction</th>
+            </tr>
+            <tr>
+                <td><input type="checkbox" id="project1" name="project1"></td>
+                <td>Model 1: Clear</td>
+                <td><input type="file" id="file1" name="file1" accept=".csv"></td>
+                <td><input type="number" id="column1-1" name="column1-1" min="1"></td>
+                <td><input type="number" id="column2-1" name="column2-1" min="1"></td>
+            </tr>
+            <tr>
+                <td><input type="checkbox" id="project2" name="project2"></td>
+                <td>Model 2: Cloudy</td>
+                <td><input type="file" id="file2" name="file2" accept=".csv"></td>
+                <td><input type="number" id="column1-2" name="column1-2" min="1"></td>
+                <td><input type="number" id="column2-2" name="column2-2" min="1"></td>
+                <td><input type="number" id="column3-2" name="column3-2" min="1"></td>
+            </tr>
+            <tr>
+                <td><input type="checkbox" id="project3" name="project3"></td>
+                <td>Model 3: Rainy</td>
+                <td><input type="file" id="file3" name="file3" accept=".csv"></td>
+                <td><input type="number" id="column1-3" name="column1-3" min="1"></td>
+                <td><input type="number" id="column2-3" name="column2-3" min="1"></td>
+                <td><input type="number" id="column3-3" name="column3-3" min="1"></td>
+            </tr>
+            <tr>
+                <td><input type="checkbox" id="project4" name="project4"></td>
+                <td>Model 4: Unified</td>
+                <td><input type="file" id="file4" name="file4" accept=".csv"></td>
+                <td><input type="number" id="column1-4" name="column1-4" min="1"></td>
+                <td><input type="number" id="column2-4" name="column2-4" min="1"></td>
+                <td><input type="number" id="column3-4" name="column3-4" min="1"></td>
+            </tr>
+        </table>
+        <button id="uploadBtn" onclick="uploadFiles()">Upload Files</button>
+        <button id="runBtn" onclick="runSelectedModels()">Run Models</button>
+        <!-- Button to download text file -->
+        <button id="downloadBtn" onclick="downloadPredictions()">Download Predictions</button>
+        <!-- Placeholder for Plotly chart -->
+        <div id="plotly-chart" style="margin-top: 30px; display:none;">
+            <h2>Prediction Plot</h2>
+            <div id="plot"></div>
+        </div>
+    </div>
+
+
+    <div id="contact" class="content">
+        <h1>Contact Us</h1>
+        <p>You can reach us through the contact details provided here.</p>
+    </div>
+    <div id="blogs" class="content">
+        <h1>Our Blogs</h1>
+        <p>Read our latest blogs here.</p>
+    </div>
+
+    
+
+    <script>
+    let userTag;
+
+    function initializeUserTag() {
+        userTag = generateUniqueTag();
+    }
+
+    function generateUniqueTag() {
+        return Math.random().toString(36).substr(2, 9)+'_';
+    }
+
+
+    function showSection(sectionId) {
+        var sections = document.getElementsByClassName('content');
+        for (var i = 0; i < sections.length; i++) {
+            sections[i].style.display = 'none';
+        }
+        document.getElementById(sectionId).style.display = 'block';
+    }
+        function uploadFiles() {
+            var checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            
+           
+            checkboxes.forEach(function(checkbox) {
+                var row = checkbox.closest('tr');
+                var modelText = row.cells[1].innerText;
+                var modelName = modelText.split(':')[1].trim().toLowerCase();
+                var fileInput = row.querySelector('input[type="file"]');
+                var file = fileInput.files[0];
+
+
+                if (file) {
+                    if (file.size > 2 * 1024 * 1024) {
+                        alert('File size should not exceed 2MB.');
+                        return;
+                    }
+                    if (file.type !== 'text/csv' && file.name.split('.').pop().toLowerCase() !== 'csv') {
+                        alert('Please upload a valid CSV file.');
+                        return;
+                    }
+
+                    var formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('model_name', modelName);
+                    formData.append('user_tag', userTag);
+
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('POST', '/upload', true);
+                    xhr.onload = function() {
+                        if (xhr.status === 200) {
+                            var response = JSON.parse(xhr.responseText);
+                            alert('File uploaded and renamed to: ' + response.filename);
+                        } else {
+                            alert('File upload failed!');
+                        }
+                    };
+                    xhr.send(formData);
+                }
+            });
+        }
+
+    function runSelectedModels() {
+    var checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+    var selectedModels = [];
+    checkboxes.forEach(function(checkbox) {
+        var row = checkbox.closest('tr');
+        var modelText = row.cells[1].innerText;
+        var modelName = modelText.split(':')[1].trim().toLowerCase();
+
+        var columns = [];
+        for (var i = 3; i < row.cells.length; i++) {
+            var columnInput = row.cells[i].querySelector('input[type="number"]');
+            if (columnInput && columnInput.value) {
+                columns.push(parseInt(columnInput.value));
+            }
+        }
+
+        selectedModels.push({ model_name: modelName, columns: columns});
+    });
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/run_model', true);  // Ensure this endpoint matches your Flask route
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    xhr.onload = function() {
+        var response = JSON.parse(xhr.responseText);
+        if (xhr.status === 200) {
+            alert('Models run successfully');
+            plotData(response);
+        } else {
+            var errorMessage = response.error || 'An unknown error occurred';
+            alert('Error: ' + errorMessage);
+        }
+    };
+    xhr.send(JSON.stringify({ models: selectedModels , user_tag: userTag }));
+}
+
+
+    
+function plotData(response) {
+        var traces = [];
+
+        for (const [modelName, values] of Object.entries(response)) {
+            if (modelName.endsWith('_T')) {
+                var temperatures = values;  // Temperature values
+                var predictionsKey = modelName.replace('_T', ''); // Get the corresponding predictions key
+
+                if (response[predictionsKey]) {
+                    var predictions = response[predictionsKey]; // Predictions values
+
+                    var trace = {
+                        x: temperatures,  // Temperature values
+                        y: predictions,  // Predictions
+                        mode: 'markers',
+                        type: 'scatter',
+                        name: predictionsKey // Use the model name without 'T' as the trace name
+                    };
+                    traces.push(trace);
+                }
+            }
+        }
+
+        var layout = {
+            title: 'Temperature vs Estimated Longwave Radiation',
+            xaxis: { title: 'Temperature'},
+            yaxis: { title: 'Longwave Radiation'}
+        };
+
+        document.getElementById('plotly-chart').style.display = 'block';
+        Plotly.newPlot('plot', traces, layout);
+    }
+
+
+    function downloadPredictions() {
+            fetch('/download_predictions?user_tag=' + userTag, { method: 'GET' })
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'longwave_radiation.txt';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                })
+                .catch(error => console.error('Error downloading the file:', error));
+        }
+
+
+    function cleanupUploads() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/cleanup', true);
+        xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                console.log('Temporary files cleaned up successfully.');
+            } else {
+                console.error('Failed to clean up temporary files.');
+            }
+        };
+        xhr.send(JSON.stringify({ user_tag: userTag }));
+    }
+
+    window.addEventListener('beforeunload', function(event) {
+        cleanupUploads();
+    });
+</script>
+</body>
+</html>
